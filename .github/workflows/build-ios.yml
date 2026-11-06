@@ -2,19 +2,22 @@ name: Build iOS IPA
 on: [workflow_dispatch]
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
-      - run: dotnet workload install maui-ios
-      - run: dotnet restore -p:TargetFramework=net9.0-ios
-      - run: |
-          dotnet publish OpenUtauMobile/OpenUtauMobile.csproj \
-            -f net9.0-ios -c Debug \
-            -p:ArchiveOnBuild=true \
-            -p:RuntimeIdentifier=ios-arm64
+          dotnet-version: '9.0.100'
+      - name: Install MAUI
+        run: |
+          dotnet workload install maui
+          dotnet workload install android ios
+          dotnet workload restore
+      - name: Restore
+        run: dotnet restore OpenUtauMobile/OpenUtauMobile.csproj -p:TargetFramework=net9.0-ios
+      - name: Build IPA
+        run: |
+          dotnet publish OpenUtauMobile/OpenUtauMobile.csproj -f net9.0-ios -c Debug -p:ArchiveOnBuild=true -p:RuntimeIdentifier=ios-arm64 -p:CodesignKey="" -p:CodesignProvision="" -p:BuildIpa=true
       - uses: actions/upload-artifact@v4
         with:
           name: ipa
